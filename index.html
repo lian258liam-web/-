@@ -1,0 +1,640 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, viewport-fit=cover">
+    <title>قلم Qalam – النسخة الاحترافية المتكاملة | منصة الكتابة الإبداعية</title>
+    <link href="https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400&family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/html-docx-js@0.3.1/dist/html-docx.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: linear-gradient(145deg, #0A0A0A 0%, #0F0F1A 100%);
+            font-family: 'IBM Plex Sans Arabic', 'Amiri', system-ui, sans-serif;
+            color: #E5E7EB;
+            direction: rtl;
+            min-height: 100vh;
+        }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #1E1E2A; }
+        ::-webkit-scrollbar-thumb { background: #2563EB; border-radius: 10px; }
+        
+        .app-container { max-width: 1400px; margin: 0 auto; padding: 1.5rem; }
+        
+        .card, .project-dashboard, .chapter-organizer, .editor-container, .ai-panel {
+            background: rgba(18, 24, 38, 0.95);
+            backdrop-filter: blur(2px);
+            border-radius: 28px;
+            border: 1px solid rgba(37, 99, 235, 0.2);
+            margin-bottom: 1.5rem;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .btn-blue {
+            background: linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%);
+            color: white; border: none; padding: 10px 24px; border-radius: 60px;
+            font-weight: 600; font-family: inherit; display: inline-flex;
+            align-items: center; gap: 8px; cursor: pointer; transition: 0.2s;
+            box-shadow: 0 2px 8px rgba(37, 99, 235, 0.3);
+        }
+        .btn-blue:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(37, 99, 235, 0.4); }
+        
+        .btn-emerald {
+            background: linear-gradient(135deg, #10B981 0%, #059669 100%);
+            color: white; border: none; padding: 8px 20px; border-radius: 60px;
+            font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;
+        }
+        .btn-outline {
+            background: transparent; border: 1.5px solid #334155; color: #CBD5E1;
+            border-radius: 60px; padding: 8px 20px; cursor: pointer; transition: 0.2s;
+        }
+        .btn-outline:hover { border-color: #2563EB; color: #2563EB; background: rgba(37, 99, 235, 0.1); }
+        
+        .layout-controls {
+            display: flex; justify-content: center; gap: 10px; margin-bottom: 2rem;
+        }
+        .view-btn {
+            background: #1E2438; border: 1px solid #334155; color: #9CA3AF;
+            width: 45px; height: 45px; border-radius: 12px; cursor: pointer; transition: 0.2s;
+        }
+        .view-btn.active { background: #2563EB; color: white; border-color: #2563EB; }
+
+        .books-grid {
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+            gap: 1.8rem; margin-top: 1rem;
+        }
+        .books-grid.list-view {
+            grid-template-columns: 1fr;
+        }
+        .books-grid.list-view .book-card {
+            display: flex; flex-direction: row; height: 100px; align-items: center;
+        }
+        .books-grid.list-view .book-cover {
+            width: 80px; height: 100%; border-radius: 0;
+        }
+
+        .book-card {
+            background: #121826; border-radius: 24px; overflow: hidden;
+            border: 1px solid #262C3F; cursor: pointer; transition: all 0.3s ease;
+            position: relative;
+        }
+        .book-card:hover { transform: translateY(-8px); border-color: #2563EB; }
+        .book-cover {
+            height: 260px; background: linear-gradient(145deg, #1A1F2E, #0F1320);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 4rem; color: #2563EB; background-size: cover; background-position: center;
+        }
+        .book-info { padding: 1.2rem; flex-grow: 1; }
+        .book-title { font-weight: 700; font-size: 1.2rem; margin-bottom: 0.3rem; }
+        .book-meta { font-size: 0.75rem; color: #9CA3AF; display: flex; gap: 12px; }
+        .delete-book-btn {
+            position: absolute; top: 12px; right: 12px; background: rgba(239, 68, 68, 0.9);
+            color: white; border: none; width: 34px; height: 34px; border-radius: 50%;
+            cursor: pointer; z-index: 5; transition: 0.2s;
+        }
+        .delete-book-btn:hover { background: #DC2626; transform: scale(1.05); }
+
+        .project-dashboard { padding: 1.8rem; border-top: 4px solid #2563EB; }
+        .stats-row { display: flex; gap: 1.5rem; flex-wrap: wrap; margin-top: 1rem; }
+        .stat { background: #0F111A; padding: 0.5rem 1.2rem; border-radius: 40px; border: 1px solid #1E2438; font-size: 0.9rem; }
+        
+        .chapter-organizer { padding: 1rem; margin-bottom: 1rem; }
+        .chapter-list-scroll { max-height: 300px; overflow-y: auto; padding-left: 5px; }
+        .chapter-item {
+            background: #1A2030; padding: 14px 18px; border-radius: 18px;
+            margin-bottom: 10px; cursor: pointer; display: flex;
+            justify-content: space-between; align-items: center; transition: 0.2s;
+            border: 1px solid transparent;
+        }
+        .chapter-item.active-chapter { border-color: #2563EB; background: rgba(37, 99, 235, 0.15); }
+        .chapter-item:hover:not(.active-chapter) { background: #262F42; }
+        
+        .editor-container { padding: 1.5rem; }
+        .rich-toolbar { display: flex; gap: 10px; flex-wrap: wrap; padding-bottom: 1rem; border-bottom: 1px solid #262C3F; margin-bottom: 1rem; }
+        .tool-btn {
+            background: #1E2438; border: none; padding: 8px 16px; border-radius: 40px;
+            color: #CBD5E1; cursor: pointer; transition: 0.2s; font-family: inherit;
+        }
+        .tool-btn:hover { background: #2563EB; color: white; }
+        
+        .text-editor {
+            min-height: 450px; background: #0A0D16; border-radius: 20px;
+            padding: 1.8rem; font-family: 'Amiri', serif; font-size: 1.25rem;
+            line-height: 1.85; border: 1px solid #1E2438; color: #F1F5F9;
+            direction: rtl; text-align: right; white-space: pre-wrap; overflow-y: auto;
+        }
+        .text-editor img { max-width: 100%; border-radius: 16px; margin: 20px 0; }
+        .text-editor:focus { outline: none; border-color: #2563EB; }
+        
+        .floating-cta {
+            position: fixed; bottom: 32px; left: 32px; background: linear-gradient(135deg, #2563EB 0%, #1E40AF 100%);
+            width: 64px; height: 64px; border-radius: 32px; display: flex;
+            align-items: center; justify-content: center; z-index: 100; cursor: pointer;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+        }
+        .floating-cta:hover { transform: scale(1.05); }
+        .floating-cta i { font-size: 28px; color: white; }
+        
+        .export-sheet {
+            position: fixed; bottom: -100%; left: 0; right: 0; background: #121826;
+            border-radius: 32px 32px 0 0; padding: 2rem; transition: 0.35s; z-index: 200;
+            border-top: 2px solid #2563EB; backdrop-filter: blur(20px);
+        }
+        .export-sheet.open { bottom: 0; }
+        .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 150; display: none; backdrop-filter: blur(4px); }
+        .overlay.active { display: block; }
+        .toast-msg {
+            position: fixed; bottom: 110px; left: 50%; transform: translateX(-50%);
+            background: #2563EB; padding: 12px 28px; border-radius: 60px;
+            color: white; font-weight: bold; display: none; z-index: 300;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.3); white-space: nowrap;
+        }
+        
+        @media (max-width: 680px) {
+            .app-container { padding: 1rem; }
+            .text-editor { padding: 1rem; font-size: 1rem; }
+            .toast-msg { white-space: normal; text-align: center; width: 90%; }
+        }
+    </style>
+</head>
+<body>
+
+<input type="file" id="bookCoverInput" accept="image/jpeg,image/png,image/webp" style="display:none">
+<input type="file" id="editorImageInput" accept="image/jpeg,image/png,image/webp" style="display:none">
+
+<div class="app-container">
+    <div id="librarySection">
+        <div style="margin-bottom: 1.5rem; text-align: center;">
+            <h1 style="font-size: 2.5rem; background: linear-gradient(135deg, #2563EB, #10B981); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">📚 قلم</h1>
+            <p style="color: #94A3B8;">مساحتك الإبداعية لكتابة الروايات وتنظيم الفصول</p>
+        </div>
+
+        <div class="layout-controls">
+            <button class="view-btn active" id="gridViewBtn" title="عرض شبكي"><i class="fas fa-th-large"></i></button>
+            <button class="view-btn" id="listViewBtn" title="عرض قائمة"><i class="fas fa-list"></i></button>
+        </div>
+
+        <div id="libraryContainer" class="books-grid"></div>
+    </div>
+
+    <div id="projectDashboard" style="display: none;">
+        <div class="project-dashboard">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+                <h2 id="selectedBookTitle" style="color: #2563EB;">الكتاب الحالي</h2>
+                <div style="display: flex; gap: 12px;">
+                    <button class="btn-outline" id="changeCoverBtn"><i class="fas fa-camera"></i> غلاف الكتاب</button>
+                    <button class="btn-outline" id="closeBookBtn"><i class="fas fa-times"></i> إغلاق</button>
+                </div>
+            </div>
+            <div class="stats-row" id="statsArea">
+                <span class="stat"><i class="fas fa-file-alt"></i> <span id="wordCount">0</span> كلمة</span>
+                <span class="stat"><i class="fas fa-clock"></i> <span id="readTime">0</span> دقائق قراءة</span>
+                <span class="stat"><i class="fas fa-chart-line"></i> <span id="progressStat">0</span>% مكتمل</span>
+            </div>
+        </div>
+
+        <div class="chapter-organizer">
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.5rem 0 1rem 0; flex-wrap: wrap; gap: 10px;">
+                <h3><i class="fas fa-layer-group"></i> الفصول <span id="chapterCountBadge" style="color:#2563EB;"></span></h3>
+                <button class="btn-blue" id="addChapterBtn"><i class="fas fa-plus"></i> فصل جديد</button>
+            </div>
+            <div id="chapterListContainer" class="chapter-list-scroll"></div>
+        </div>
+
+        <div class="editor-container">
+            <div class="rich-toolbar">
+                <button class="tool-btn" id="formatBold"><i class="fas fa-bold"></i> غامق</button>
+                <button class="tool-btn" id="formatItalic"><i class="fas fa-italic"></i> مائل</button>
+                <button class="tool-btn" id="formatH1"><i class="fas fa-heading"></i> عنوان1</button>
+                <button class="tool-btn" id="formatH2"><i class="fas fa-heading"></i> عنوان2</button>
+                <button class="tool-btn" id="insertLocalImageBtn"><i class="fas fa-image"></i> إدراج صورة</button>
+            </div>
+            <div id="richEditor" class="text-editor" contenteditable="true" placeholder="اكتب فصلك هنا... القلم بين يديك"></div>
+            <div style="margin-top: 1.2rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+                <button class="btn-blue" id="explicitSaveBtn"><i class="fas fa-save"></i> حفظ الفصل</button>
+                <span style="font-size: 0.75rem; color: #6B7280;"><i class="fas fa-database"></i> حفظ تلقائي أثناء الكتابة</span>
+            </div>
+        </div>
+
+        <div style="display: flex; justify-content: flex-end; margin: 1rem 0 2rem;">
+            <button class="btn-blue" id="exportBtn"><i class="fas fa-download"></i> تصدير الكتاب (PDF/DOCX/EPUB)</button>
+        </div>
+    </div>
+</div>
+
+<div class="floating-cta" id="newBookFab">
+    <i class="fas fa-pen-fancy"></i>
+</div>
+
+<div class="overlay" id="overlay"></div>
+<div class="export-sheet" id="exportSheet">
+    <h3 style="margin-bottom: 1.5rem; color:#2563EB;"><i class="fas fa-file-export"></i> تصدير الكتاب</h3>
+    <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+        <button class="btn-blue" id="exportPDFBtn"><i class="fas fa-file-pdf"></i> PDF</button>
+        <button class="btn-blue" id="exportDOCXBtn"><i class="fas fa-file-word"></i> DOCX</button>
+        <button class="btn-blue" id="exportEPUBBtn"><i class="fas fa-book"></i> EPUB</button>
+    </div>
+    <button class="btn-outline" id="closeExportBtn" style="margin-top: 1.8rem; width:100%;">إلغاء</button>
+</div>
+<div id="toastMsg" class="toast-msg"></div>
+
+<script>
+    let books = [];
+    let activeBookId = null;
+    let activeChapterId = null;
+    let autoSaveTimer = null;
+    let currentView = "grid";
+
+    function showToast(msg) {
+        const toast = document.getElementById("toastMsg");
+        toast.innerText = msg; toast.style.display = "block";
+        setTimeout(() => toast.style.display = "none", 2600);
+    }
+
+    function loadData() {
+        const stored = localStorage.getItem("qalam_v7_final");
+        if(stored) books = JSON.parse(stored);
+        else {
+            books = [
+                { id: "1", title: "ليالي القاهرة", cover: null, chapters: [{ id: "ch1", title: "المقدمة", content: "<p>كانت الليلة هادئة، والقمر يضيء النيل، والأحلام تنساب كالنسيم العليل...</p>" }, { id: "ch2", title: "اللقاء الأول", content: "<p>التقى الأصدقاء على مقهى أثري، ودار حديث جميل عن ذكريات الزمن الجميل.</p>" }] },
+                { id: "2", title: "على حافة القلم", cover: null, chapters: [{ id: "ch3", title: "البداية", content: "<p>يكتب الكاتب ليخلد الأفكار، ويمسك القلم بكل شغف، تتزين الصفحات بحروف من نور.</p>" }] }
+            ];
+        }
+        renderLibrary();
+    }
+
+    function saveToLocal() { localStorage.setItem("qalam_v7_final", JSON.stringify(books)); }
+
+    function computeWordsFromHtml(html) {
+        if(!html) return 0;
+        let text = html.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+        return text.length ? text.split(/\s+/).length : 0;
+    }
+
+    function escapeHtml(str) {
+        return str.replace(/[&<>]/g, function(m) {
+            if(m === '&') return '&amp;'; if(m === '<') return '&lt;'; if(m === '>') return '&gt;'; return m;
+        });
+    }
+
+    function renderLibrary() {
+        const container = document.getElementById("libraryContainer");
+        container.className = `books-grid ${currentView === 'list' ? 'list-view' : ''}`;
+        
+        container.innerHTML = books.map(book => `
+            <div class="book-card" data-id="${book.id}">
+                <button class="delete-book-btn" data-delete-id="${book.id}"><i class="fas fa-trash-alt"></i></button>
+                <div class="book-cover" style="${book.cover ? `background-image:url(${book.cover}); background-size:cover; font-size:0;` : ''}">${book.cover ? '' : '📖'}</div>
+                <div class="book-info">
+                    <div class="book-title">${escapeHtml(book.title)}</div>
+                    <div class="book-meta"><span>${book.chapters.length} فصول</span> • <span>${computeWordsFromHtml(book.chapters.map(c=>c.content).join(''))} كلمة</span></div>
+                </div>
+            </div>
+        `).join('');
+
+        document.querySelectorAll("[data-delete-id]").forEach(btn => {
+            btn.addEventListener("click", (e) => {
+                e.stopPropagation();
+                const id = btn.getAttribute("data-delete-id");
+                if(confirm("⚠️ هل أنت متأكد من حذف هذا الكتاب نهائياً؟")) {
+                    books = books.filter(b => b.id !== id);
+                    if(activeBookId === id) closeBook();
+                    saveToLocal(); renderLibrary(); showToast("✅ تم حذف الكتاب");
+                }
+            });
+        });
+
+        document.querySelectorAll(".book-card").forEach(card => {
+            card.addEventListener("click", (e) => {
+                if(e.target.closest('[data-delete-id]')) return;
+                const id = card.getAttribute("data-id");
+                if(id) openBook(id);
+            });
+        });
+    }
+
+    function openBook(bookId) {
+        activeBookId = bookId;
+        const book = books.find(b => b.id === bookId);
+        if(!book.chapters.length) {
+            book.chapters = [{ id: "ch"+Date.now(), title: "الفصل الأول", content: "<p>بداية جديدة مع قلم...</p>" }];
+            saveToLocal();
+        }
+        if(!activeChapterId || !book.chapters.find(c=>c.id===activeChapterId)) activeChapterId = book.chapters[0].id;
+        renderChaptersOrganizer(); loadChapterIntoEditor(activeChapterId); updateDashboardStats();
+        document.getElementById("librarySection").style.display = "none";
+        document.getElementById("projectDashboard").style.display = "block";
+        document.getElementById("newBookFab").style.display = "none";
+    }
+
+    function closeBook() {
+        saveCurrentContentImmediate();
+        activeBookId = null; activeChapterId = null;
+        document.getElementById("projectDashboard").style.display = "none";
+        document.getElementById("librarySection").style.display = "block";
+        document.getElementById("newBookFab").style.display = "flex";
+        renderLibrary();
+    }
+
+    function renderChaptersOrganizer() {
+        const book = books.find(b => b.id === activeBookId);
+        if(!book) return;
+        const container = document.getElementById("chapterListContainer");
+        container.innerHTML = "";
+        book.chapters.forEach(ch => {
+            const div = document.createElement("div");
+            div.className = `chapter-item ${activeChapterId === ch.id ? 'active-chapter' : ''}`;
+            div.innerHTML = `
+                <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+                    <i class="fas fa-file-alt"></i> <span>${escapeHtml(ch.title)}</span>
+                    <span style="font-size: 0.7rem; background: #2D3748; padding: 2px 10px; border-radius: 30px;">${computeWordsFromHtml(ch.content)} كلمة</span>
+                </div>
+                <div>
+                    <i class="fas fa-pen edit-chapter" data-id="${ch.id}" style="margin-left: 12px; cursor: pointer; color: #9CA3AF;"></i>
+                    <i class="fas fa-trash-alt delete-chapter" data-id="${ch.id}" style="cursor: pointer; color: #9CA3AF;"></i>
+                </div>
+            `;
+            div.addEventListener("click", (e) => {
+                if(e.target.classList.contains('edit-chapter') || e.target.classList.contains('delete-chapter')) return;
+                selectChapter(ch.id);
+            });
+            container.appendChild(div);
+        });
+
+        document.querySelectorAll(".edit-chapter").forEach(btn => {
+            btn.addEventListener("click", (e) => {
+                e.stopPropagation();
+                const cid = btn.getAttribute("data-id");
+                const chapter = book.chapters.find(c => c.id === cid);
+                const newTitle = prompt("✏️ تعديل عنوان الفصل:", chapter.title);
+                if(newTitle && newTitle.trim()) { chapter.title = newTitle.trim(); saveToLocal(); renderChaptersOrganizer(); updateDashboardStats(); showToast("تم تحديث العنوان"); }
+            });
+        });
+        document.querySelectorAll(".delete-chapter").forEach(btn => {
+            btn.addEventListener("click", (e) => {
+                e.stopPropagation();
+                if(book.chapters.length <= 1) { showToast("⚠️ لا يمكن حذف الفصل الوحيد"); return; }
+                const cid = btn.getAttribute("data-id");
+                book.chapters = book.chapters.filter(c => c.id !== cid);
+                if(activeChapterId === cid) { activeChapterId = book.chapters[0].id; loadChapterIntoEditor(activeChapterId); }
+                saveToLocal(); renderChaptersOrganizer(); updateDashboardStats(); showToast("🗑️ تم حذف الفصل");
+            });
+        });
+        document.getElementById("chapterCountBadge").innerHTML = `(${book.chapters.length})`;
+    }
+
+    function selectChapter(chapterId) {
+        saveCurrentContentImmediate(); activeChapterId = chapterId;
+        loadChapterIntoEditor(chapterId); renderChaptersOrganizer(); updateDashboardStats();
+        const book = books.find(b => b.id === activeBookId);
+        const chapter = book?.chapters.find(c => c.id === chapterId);
+        if(chapter) showToast(`📖 الفصل: ${chapter.title}`);
+    }
+
+    function loadChapterIntoEditor(chapterId) {
+        const book = books.find(b => b.id === activeBookId);
+        const chapter = book.chapters.find(c => c.id === chapterId);
+        document.getElementById("richEditor").innerHTML = chapter.content || "<p>ابدأ كتابة فصلك...</p>";
+    }
+
+    function saveCurrentContentImmediate() {
+        if(!activeBookId || !activeChapterId) return false;
+        const book = books.find(b => b.id === activeBookId);
+        const chapter = book.chapters.find(c => c.id === activeChapterId);
+        const newContent = document.getElementById("richEditor").innerHTML;
+        if(chapter.content !== newContent) {
+            chapter.content = newContent; saveToLocal(); updateDashboardStats(); renderChaptersOrganizer(); return true;
+        }
+        return false;
+    }
+
+    function handleAutoSave() {
+        if(autoSaveTimer) clearTimeout(autoSaveTimer);
+        autoSaveTimer = setTimeout(() => { if(activeBookId && activeChapterId) saveCurrentContentImmediate(); }, 700);
+        updateDashboardStats();
+    }
+
+    function updateDashboardStats() {
+        const book = books.find(b => b.id === activeBookId);
+        if(!book) return;
+        let totalWords = 0;
+        book.chapters.forEach(ch => totalWords += computeWordsFromHtml(ch.content));
+        document.getElementById("wordCount").innerText = totalWords;
+        document.getElementById("readTime").innerText = Math.max(1, Math.floor(totalWords / 200));
+        const completed = book.chapters.filter(ch => (ch.content?.length || 0) > 100).length;
+        const progress = book.chapters.length ? Math.floor((completed / book.chapters.length)*100) : 0;
+        document.getElementById("progressStat").innerText = progress;
+        document.getElementById("selectedBookTitle").innerText = book.title;
+    }
+
+    // الصور المحلية
+    document.getElementById('insertLocalImageBtn').onclick = () => document.getElementById('editorImageInput').click();
+    document.getElementById('editorImageInput').onchange = function(e) {
+        const file = e.target.files[0]; if(!file) return;
+        const reader = new FileReader();
+        reader.onload = function(event) {
+            document.execCommand("insertImage", false, event.target.result);
+            saveCurrentContentImmediate(); showToast("✅ تم إدراج الصورة");
+        };
+        reader.readAsDataURL(file); this.value = '';
+    };
+
+    document.getElementById('changeCoverBtn').onclick = () => document.getElementById('bookCoverInput').click();
+    document.getElementById('bookCoverInput').onchange = function(e) {
+        const file = e.target.files[0]; if(!file) return;
+        const reader = new FileReader();
+        reader.onload = function(event) {
+            const book = books.find(b => b.id === activeBookId);
+            book.cover = event.target.result; saveToLocal(); showToast("📸 تم تحديث غلاف الكتاب");
+        };
+        reader.readAsDataURL(file); this.value = '';
+    };
+
+    // وظائف التصدير
+    function getBookExportHTML() {
+        const book = books.find(b => b.id === activeBookId);
+        const coverHtml = book.cover ? `<div style="text-align:center; margin:30px 0;"><img src="${book.cover}" style="max-width:350px; border-radius:20px; box-shadow:0 8px 24px rgba(0,0,0,0.2);"></div>` : '';
+        const chaptersHtml = book.chapters.map(ch => `<div style="margin-bottom:40px; page-break-before:avoid;"><h2 style="color:#2563EB; border-bottom:2px solid #2563EB; padding-bottom:8px;">${ch.title}</h2><div style="font-family:'Amiri',serif; line-height:1.8;">${ch.content}</div></div>`).join('');
+        return `<!DOCTYPE html><html dir="rtl"><head><meta charset="UTF-8"><title>${book.title}</title><style>body{font-family:'Amiri',serif; max-width:800px; margin:auto; padding:2rem; background:#fff; color:#111;} h1{color:#2563EB; text-align:center;}</style></head><body><h1>${book.title}</h1>${coverHtml}${chaptersHtml}</body></html>`;
+    }
+
+    async function exportFullPDF() {
+        showToast("📄 جاري إنشاء PDF...");
+        const book = books.find(b => b.id === activeBookId);
+        const { jsPDF } = window.jspdf;
+        const htmlContent = getBookExportHTML();
+        const element = document.createElement('div'); element.innerHTML = htmlContent; document.body.appendChild(element);
+        const { default: html2canvas } = await import('https://cdn.skypack.dev/html2canvas');
+        const canvas = await html2canvas(element, { scale: 2, backgroundColor: '#ffffff' });
+        const imgData = canvas.toDataURL('image/png');
+        const doc = new jsPDF({ unit: 'pt', format: 'a4' });
+        const imgWidth = doc.internal.pageSize.getWidth();
+        const imgHeight = (canvas.height * imgWidth) / canvas.width;
+        let heightLeft = imgHeight; let position = 0;
+        doc.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+        heightLeft -= doc.internal.pageSize.getHeight();
+        while (heightLeft > 0) { position = heightLeft - imgHeight; doc.addPage(); doc.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight); heightLeft -= doc.internal.pageSize.getHeight(); }
+        doc.save(`${book.title}.pdf`);
+        document.body.removeChild(element);
+        showToast(`✅ تم تصدير "${book.title}" كـ PDF`);
+    }
+
+    function exportFullDOCX() {
+        const book = books.find(b => b.id === activeBookId);
+        const blob = htmlDocx.asBlob(getBookExportHTML());
+        saveAs(blob, `${book.title}.docx`);
+        showToast(`✅ تم تصدير DOCX لـ "${book.title}"`);
+    }
+
+    // ============================================================
+    // الكود المطور لتصدير EPUB مع دعم الصور المدمجة في الفصول والغلاف
+    // ============================================================
+    async function exportFullEPUB() {
+        const book = books.find(b => b.id === activeBookId);
+        if(!book) return;
+        showToast("📚 جاري معالجة الصور وتصدير EPUB...");
+        
+        try {
+            const zip = new JSZip();
+            // ملف mimetype يجب أن يكون أول ملف وبدون ضغط
+            zip.file("mimetype", "application/epub+zip", { compression: "STORE" });
+            
+            const META_INF = zip.folder("META-INF");
+            META_INF.file("container.xml", `<?xml version="1.0"?><container version="1.0" xmlns="urn:oasis:names:tc:opendocument:xmlns:container"><rootfiles><rootfile full-path="OEBPS/content.opf" media-type="application/oebps-package+xml"/></rootfiles></container>`);
+            
+            const OEBPS = zip.folder("OEBPS");
+            const IMGS = OEBPS.folder("images"); // مجلد خاص بالصور المدمجة
+            
+            let manifestItems = `<item id="nav" href="nav.xhtml" media-type="application/xhtml+xml" properties="nav"/>`;
+            let spineItems = "";
+            let coverItem = "";
+            let imgCounter = 0;
+
+            // معالجة الغلاف
+            if(book.cover && book.cover.startsWith('data:image')) {
+                const coverType = book.cover.split(';')[0].split(':')[1];
+                const coverData = book.cover.split(',')[1];
+                OEBPS.file("cover.jpg", coverData, {base64: true});
+                manifestItems += `<item id="cover-image" href="cover.jpg" media-type="${coverType}" properties="cover-image"/><item id="cover" href="cover.xhtml" media-type="application/xhtml+xml"/>`;
+                coverItem = `<itemref idref="cover"/>`;
+                OEBPS.file("cover.xhtml", `<?xml version="1.0"?><html xmlns="http://www.w3.org/1999/xhtml" dir="rtl"><head><title>Cover</title><style>body{margin:0;padding:0;text-align:center;} img{max-width:100%;height:auto;}</style></head><body><img src="cover.jpg"/></body></html>`);
+            }
+            
+            // معالجة الفصول والصور المدمجة داخلها
+            book.chapters.forEach((ch, i) => {
+                const id = `chap${i}`;
+                let content = ch.content;
+
+                // البحث عن الصور داخل النص وتحويلها لملفات داخل الـ EPUB
+                const tempDiv = document.createElement('div');
+                tempDiv.innerHTML = content;
+                const images = tempDiv.querySelectorAll('img');
+                
+                images.forEach(img => {
+                    if(img.src && img.src.startsWith('data:image')) {
+                        imgCounter++;
+                        const imgType = img.src.split(';')[0].split(':')[1];
+                        const imgExt = imgType.split('/')[1];
+                        const imgName = `img_${imgCounter}.${imgExt}`;
+                        const imgData = img.src.split(',')[1];
+                        
+                        IMGS.file(imgName, imgData, {base64: true});
+                        manifestItems += `<item id="extimg${imgCounter}" href="images/${imgName}" media-type="${imgType}"/>`;
+                        img.src = `images/${imgName}`; // تغيير الرابط داخل الفصل ليشير للملف الجديد
+                    }
+                });
+
+                content = tempDiv.innerHTML;
+                manifestItems += `<item id="${id}" href="${id}.xhtml" media-type="application/xhtml+xml"/>`;
+                spineItems += `<itemref idref="${id}"/>`;
+                OEBPS.file(`${id}.xhtml`, `<?xml version="1.0" encoding="UTF-8"?><html xmlns="http://www.w3.org/1999/xhtml" dir="rtl"><head><title>${ch.title}</title><style>img{max-width:100%; height:auto; border-radius:8px; margin:15px 0;}</style></head><body><h2>${ch.title}</h2>${content}</body></html>`);
+            });
+            
+            const opf = `<?xml version="1.0"?><package xmlns="http://www.idpf.org/2007/opf" version="3.0" unique-identifier="pub-id"><metadata xmlns:dc="http://purl.org/dc/elements/1.1/"><dc:title>${book.title}</dc:title><dc:language>ar</dc:language>${book.cover ? '<meta name="cover" content="cover-image"/>' : ''}</metadata><manifest>${manifestItems}</manifest><spine>${coverItem}${spineItems}</spine></package>`;
+            OEBPS.file("content.opf", opf);
+            OEBPS.file("nav.xhtml", `<?xml version="1.0"?><html xmlns="http://www.w3.org/1999/xhtml" xmlns:epub="http://www.idpf.org/2007/ops" dir="rtl"><head><title>فهرس المحتويات</title></head><body><nav epub:type="toc"><h2>الفهرس</h2><ol>${book.chapters.map((ch,i)=>`<li><a href="chap${i}.xhtml">${ch.title}</a></li>`).join("")}</ol></nav></body></html>`);
+            
+            const finalBlob = await zip.generateAsync({ 
+                type: "blob",
+                mimeType: "application/epub+zip",
+                compression: "DEFLATE"
+            });
+            
+            const fileName = `${book.title.replace(/\s+/g, '_')}.epub`;
+            const url = URL.createObjectURL(finalBlob);
+            const link = document.createElement("a");
+            link.href = url;
+            link.download = fileName;
+            document.body.appendChild(link);
+            link.click();
+            
+            setTimeout(() => {
+                document.body.removeChild(link);
+                URL.revokeObjectURL(url);
+            }, 1500);
+            
+            showToast(`✅ تم تصدير الكتاب بالصور: ${book.title}`);
+        } catch (err) {
+            console.error(err);
+            showToast("❌ فشل التصدير: ربما حجم الصور كبير جداً");
+        }
+    }
+
+    // ربط الأحداث
+    document.getElementById("closeBookBtn")?.addEventListener("click", closeBook);
+    document.getElementById("newBookFab").addEventListener("click", () => {
+        const title = prompt("📘 عنوان الكتاب الجديد:");
+        if(title) {
+            books.push({ id: Date.now().toString(), title: title, cover: null, chapters: [{ id: "ch"+Date.now(), title: "الافتتاحية", content: "<p>بداية جديدة مع قلم...</p>" }] });
+            saveToLocal(); renderLibrary(); openBook(books[books.length-1].id); showToast(`تم إنشاء "${title}"`);
+        }
+    });
+    document.getElementById("addChapterBtn").addEventListener("click", () => {
+        if(activeBookId) {
+            const book = books.find(b => b.id === activeBookId);
+            const newId = "ch"+Date.now();
+            book.chapters.push({ id: newId, title: `فصل ${book.chapters.length+1}`, content: "<p>اكتب محتوى الفصل الجديد...</p>" });
+            saveToLocal(); renderChaptersOrganizer(); selectChapter(newId); showToast("✨ تم إضافة فصل جديد");
+        }
+    });
+    document.getElementById("explicitSaveBtn").addEventListener("click", () => { if(saveCurrentContentImmediate()) showToast("✅ تم حفظ التغييرات"); else showToast("ℹ️ لا توجد تغييرات جديدة"); });
+    document.getElementById("exportBtn").addEventListener("click", () => { document.getElementById("exportSheet").classList.add("open"); document.getElementById("overlay").classList.add("active"); });
+    document.getElementById("closeExportBtn").addEventListener("click", () => { document.getElementById("exportSheet").classList.remove("open"); document.getElementById("overlay").classList.remove("active"); });
+    document.getElementById("overlay").addEventListener("click", () => { document.getElementById("exportSheet").classList.remove("open"); document.getElementById("overlay").classList.remove("active"); });
+    document.getElementById("exportPDFBtn").addEventListener("click", () => { exportFullPDF(); document.getElementById("exportSheet").classList.remove("open"); document.getElementById("overlay").classList.remove("active"); });
+    document.getElementById("exportDOCXBtn").addEventListener("click", () => { exportFullDOCX(); document.getElementById("exportSheet").classList.remove("open"); document.getElementById("overlay").classList.remove("active"); });
+    document.getElementById("exportEPUBBtn").addEventListener("click", () => { exportFullEPUB(); document.getElementById("exportSheet").classList.remove("open"); document.getElementById("overlay").classList.remove("active"); });
+    
+    // أدوات التحرير
+    document.addEventListener("click", (e) => {
+        if(e.target.closest("#formatBold")) document.execCommand("bold");
+        else if(e.target.closest("#formatItalic")) document.execCommand("italic");
+        else if(e.target.closest("#formatH1")) document.execCommand("formatBlock", false, "<h1>");
+        else if(e.target.closest("#formatH2")) document.execCommand("formatBlock", false, "<h2>");
+    });
+    
+    // تبديل العرض
+    document.getElementById("gridViewBtn").addEventListener("click", () => {
+        currentView = "grid";
+        document.getElementById("gridViewBtn").classList.add("active");
+        document.getElementById("listViewBtn").classList.remove("active");
+        renderLibrary();
+    });
+    document.getElementById("listViewBtn").addEventListener("click", () => {
+        currentView = "list";
+        document.getElementById("listViewBtn").classList.add("active");
+        document.getElementById("gridViewBtn").classList.remove("active");
+        renderLibrary();
+    });
+    
+    const editorElem = document.getElementById("richEditor");
+    editorElem.addEventListener("input", handleAutoSave);
+    
+    loadData();
+</script>
+</body>
+</html>
